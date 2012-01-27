@@ -53,7 +53,7 @@ typedef const struct si_pub  si_t;
 #define WL_ASSOC(x)
 #define WL_INFORM(x)
 #define WL_WSEC(x)
-#define WL_SCAN(x)
+#define WL_SCAN(x) printk x
 #define WL_PNO(x)
 #define WL_TRACE_COEX(x)
 
