@@ -65,6 +65,12 @@ typedef struct dhd_ioctl {
 #define DHD_GET_VAR				2
 #define DHD_SET_VAR				3
 
+
+/* For enabling DHD Debug*/
+#define DHD_DEBUG
+#define DHD_DEBUG_COMP_MODE_ON
+
+
 /* message levels */
 #define DHD_ERROR_VAL	0x0001
 #define DHD_TRACE_VAL	0x0002

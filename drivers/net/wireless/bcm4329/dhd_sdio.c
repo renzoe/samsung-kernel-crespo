@@ -308,8 +308,10 @@ typedef struct dhd_bus {
 #define DHD_NOPMU(dhd)	(FALSE)
 
 #ifdef DHD_DEBUG
+#if !defined(DHD_DEBUG_COMP_MODE_ON)
 static int qcount[NUMPRIO];
 static int tx_packets[NUMPRIO];
+#endif
 #endif /* DHD_DEBUG */
 
 /* Deferred transmit */
@@ -960,6 +962,8 @@ dhdsdio_txpkt(dhd_bus_t *bus, void *pkt, uint chan, bool free_pkt)
 	htol32_ua_store(0, frame + SDPCM_FRAMETAG_LEN + sizeof(swheader));
 
 #ifdef DHD_DEBUG
+#if !defined(DHD_DEBUG_COMP_MODE_ON)
+
 	tx_packets[PKTPRIO(pkt)]++;
 	if (DHD_BYTES_ON() &&
 	    (((DHD_CTL_ON() && (chan == SDPCM_CONTROL_CHANNEL)) ||
@@ -968,6 +972,7 @@ dhdsdio_txpkt(dhd_bus_t *bus, void *pkt, uint chan, bool free_pkt)
 	} else if (DHD_HDRS_ON()) {
 		prhex("TxHdr", frame, MIN(len, 16));
 	}
+#endif
 #endif
 
 	/* Raise len to next SDIO block to eliminate tail command */
@@ -1099,8 +1104,10 @@ dhd_bus_txdata(struct dhd_bus *bus, void *pkt)
 			dhd_txflowcontrol(bus->dhd, 0, ON);
 
 #ifdef DHD_DEBUG
+#if !defined(DHD_DEBUG_COMP_MODE_ON)
 		if (pktq_plen(&bus->txq, prec) > qcount[prec])
 			qcount[prec] = pktq_plen(&bus->txq, prec);
+#endif
 #endif
 		/* Schedule DPC if needed to send queued packet(s) */
 		if (dhd_deferred_tx && !bus->dpc_sched) {
@@ -1289,11 +1296,13 @@ dhd_bus_txctl(struct dhd_bus *bus, uchar *msg, uint msglen)
 
 	if (ret == -1) {
 #ifdef DHD_DEBUG
+#if !defined(DHD_DEBUG_COMP_MODE_ON)
 		if (DHD_BYTES_ON() && DHD_CTL_ON()) {
 			prhex("Tx Frame", frame, len);
 		} else if (DHD_HDRS_ON()) {
 			prhex("TxHdr", frame, MIN(len, 16));
 		}
+#endif
 #endif
 
 		do {
@@ -1487,6 +1496,8 @@ dhd_dump_pct(struct bcmstrbuf *strbuf, char *desc, uint num, uint div)
 }
 
 void
+
+
 dhd_bus_dump(dhd_pub_t *dhdp, struct bcmstrbuf *strbuf)
 {
 	dhd_bus_t *bus = dhdp->bus;
@@ -1560,9 +1571,11 @@ dhd_bus_dump(dhd_pub_t *dhdp, struct bcmstrbuf *strbuf)
 	}
 #endif /* SDTEST */
 #ifdef DHD_DEBUG
+#ifndef DHD_DEBUG_COMP_MODE_ON
 	bcm_bprintf(strbuf, "dpc_sched %d host interrupt%spending\n",
 	            bus->dpc_sched, (bcmsdh_intr_pending(bus->sdh) ? " " : " not "));
 	bcm_bprintf(strbuf, "blocksize %d roundup %d\n", bus->blocksize, bus->roundup);
+#endif
 #endif /* DHD_DEBUG */
 	bcm_bprintf(strbuf, "clkstate %d activity %d idletime %d idlecount %d sleeping %d\n",
 	            bus->clkstate, bus->activity, bus->idletime, bus->idlecount, bus->sleeping);
@@ -1856,6 +1869,7 @@ done:
 #endif /* DHD_DEBUG_TRAP */
 
 #ifdef DHD_DEBUG
+#ifndef DHD_DEBUG_COMP_MODE_ON
 #define CONSOLE_LINE_MAX	192
 
 static int
@@ -1927,6 +1941,7 @@ break2:
 
 	return BCME_OK;
 }
+#endif /* DHD_DEBUG_COMP_MODE_ON */
 #endif /* DHD_DEBUG */
 
 int
@@ -2974,9 +2989,11 @@ dhdsdio_read_control(dhd_bus_t *bus, uint8 *hdr, uint len, uint doff)
 gotpkt:
 
 #ifdef DHD_DEBUG
+#if !defined(DHD_DEBUG_COMP_MODE_ON)
 	if (DHD_BYTES_ON() && DHD_CTL_ON()) {
 		prhex("RxCtrl", bus->rxctl, len);
 	}
+#endif
 #endif
 
 	/* Point to valid data and indicate its length */
@@ -3159,10 +3176,12 @@ dhdsdio_rxglom(dhd_bus_t *bus, uint8 rxseq)
 		}
 
 #ifdef DHD_DEBUG
+#if !defined(DHD_DEBUG_COMP_MODE_ON)
 		if (DHD_GLOM_ON()) {
 			prhex("SUPERFRAME", PKTDATA(osh, pfirst),
 			      MIN(PKTLEN(osh, pfirst), 48));
 		}
+#endif
 #endif
 
 
@@ -3235,9 +3254,11 @@ dhdsdio_rxglom(dhd_bus_t *bus, uint8 rxseq)
 			chan = SDPCM_PACKET_CHANNEL(&dptr[SDPCM_FRAMETAG_LEN]);
 			doff = SDPCM_DOFFSET_VALUE(&dptr[SDPCM_FRAMETAG_LEN]);
 #ifdef DHD_DEBUG
+#if !defined(DHD_DEBUG_COMP_MODE_ON)
 			if (DHD_GLOM_ON()) {
 				prhex("subframe", dptr, 32);
 			}
+#endif
 #endif
 
 			if ((uint16)~(sublen^check)) {
@@ -3311,9 +3332,11 @@ dhdsdio_rxglom(dhd_bus_t *bus, uint8 rxseq)
 			}
 
 #ifdef DHD_DEBUG
+#if !defined(DHD_DEBUG_COMP_MODE_ON)
 			if (DHD_BYTES_ON() && DHD_DATA_ON()) {
 				prhex("Rx Subframe Data", dptr, dlen);
 			}
+#endif
 #endif
 
 			PKTSETLEN(osh, pfirst, sublen);
@@ -3347,6 +3370,7 @@ dhdsdio_rxglom(dhd_bus_t *bus, uint8 rxseq)
 			num++;
 
 #ifdef DHD_DEBUG
+#if !defined(DHD_DEBUG_COMP_MODE_ON)
 			if (DHD_GLOM_ON()) {
 				DHD_GLOM(("%s subframe %d to stack, %p(%p/%d) nxt/lnk %p/%p\n",
 				          __FUNCTION__, num, pfirst,
@@ -3355,6 +3379,7 @@ dhdsdio_rxglom(dhd_bus_t *bus, uint8 rxseq)
 				prhex("", (uint8 *)PKTDATA(osh, pfirst),
 				      MIN(PKTLEN(osh, pfirst), 32));
 			}
+#endif
 #endif /* DHD_DEBUG */
 		}
 		dhd_os_sdunlock_rxq(bus->dhd);
@@ -3643,11 +3668,13 @@ dhdsdio_readframes(dhd_bus_t *bus, uint maxframes, bool *finished)
 			bus->tx_max = txmax;
 
 #ifdef DHD_DEBUG
+#if !defined(DHD_DEBUG_COMP_MODE_ON)
 			if (DHD_BYTES_ON() && DHD_DATA_ON()) {
 				prhex("Rx Data", rxbuf, len);
 			} else if (DHD_HDRS_ON()) {
 				prhex("RxHdr", bus->rxhdr, SDPCM_HDRLEN);
 			}
+#endif
 #endif
 
 			if (chan == SDPCM_CONTROL_CHANNEL) {
@@ -3712,9 +3739,11 @@ dhdsdio_readframes(dhd_bus_t *bus, uint maxframes, bool *finished)
 		}
 
 #ifdef DHD_DEBUG
+#if !defined(DHD_DEBUG_COMP_MODE_ON)
 		if (DHD_BYTES_ON() || DHD_HDRS_ON()) {
 			prhex("RxHdr", bus->rxhdr, SDPCM_HDRLEN);
 		}
+#endif
 #endif
 
 		/* Extract hardware header fields */
@@ -3875,9 +3904,11 @@ dhdsdio_readframes(dhd_bus_t *bus, uint maxframes, bool *finished)
 		bcopy(bus->rxhdr, PKTDATA(osh, pkt), firstread);
 
 #ifdef DHD_DEBUG
+#if !defined(DHD_DEBUG_COMP_MODE_ON)
 		if (DHD_BYTES_ON() && DHD_DATA_ON()) {
 			prhex("Rx Data", PKTDATA(osh, pkt), len);
 		}
+#endif
 #endif
 
 deliver:
@@ -3887,9 +3918,11 @@ deliver:
 				DHD_GLOM(("%s: got glom descriptor, %d bytes:\n",
 				          __FUNCTION__, len));
 #ifdef DHD_DEBUG
+#if !defined(DHD_DEBUG_COMP_MODE_ON)
 				if (DHD_GLOM_ON()) {
 					prhex("Glom Data", PKTDATA(osh, pkt), len);
 				}
+#endif
 #endif
 				PKTSETLEN(osh, pkt, len);
 				ASSERT(doff == SDPCM_HDRLEN);
@@ -4421,10 +4454,12 @@ dhdsdio_pktgen(dhd_bus_t *bus)
 			*data++ = SDPCM_TEST_FILL(fillbyte, (uint8)bus->pktgen_sent);
 
 #ifdef DHD_DEBUG
+#if !defined(DHD_DEBUG_COMP_MODE_ON)
 		if (DHD_BYTES_ON() && DHD_DATA_ON()) {
 			data = (uint8*)PKTDATA(osh, pkt) + SDPCM_HDRLEN;
 			prhex("dhdsdio_pktgen: Tx Data", data, PKTLEN(osh, pkt) - SDPCM_HDRLEN);
 		}
+#endif
 #endif
 
 		/* Send it */
@@ -4615,6 +4650,7 @@ dhd_bus_watchdog(dhd_pub_t *dhdp)
 	}
 
 #ifdef DHD_DEBUG
+#ifndef DHD_DEBUG_COMP_MODE_ON
 	/* Poll for console output periodically */
 	if (dhdp->busstate == DHD_BUS_DATA && dhd_console_ms != 0) {
 		bus->console.count += dhd_watchdog_ms;
@@ -4626,6 +4662,7 @@ dhd_bus_watchdog(dhd_pub_t *dhdp)
 				dhd_console_ms = 0;	/* On error, stop trying */
 		}
 	}
+#endif
 #endif /* DHD_DEBUG */
 
 #ifdef SDTEST

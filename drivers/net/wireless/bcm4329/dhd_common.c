@@ -269,6 +269,10 @@ dhd_doiovar(dhd_pub_t *dhd_pub, const bcm_iovar_t *vi, uint32 actionid, const ch
 		break;
 
 #ifdef DHD_DEBUG
+#ifndef DHD_DEBUG_COMP_MODE_ON
+	/*  This only works for dhd_linux where variable dhd_console_ms and function dhd_bus_console_in are declared
+	 *  not working dor dhd_common
+	 * */
 	case IOV_GVAL(IOV_DCONSOLE_POLL):
 		int_val = (int32)dhd_console_ms;
 		bcopy(&int_val, arg, val_size);
@@ -282,6 +286,7 @@ dhd_doiovar(dhd_pub_t *dhd_pub, const bcm_iovar_t *vi, uint32 actionid, const ch
 		if (len > 0)
 			bcmerror = dhd_bus_console_in(dhd_pub, arg, len - 1);
 		break;
+#endif	
 #endif
 
 	case IOV_SVAL(IOV_CLEARCOUNTS):

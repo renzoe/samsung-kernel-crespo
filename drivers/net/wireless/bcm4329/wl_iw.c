@@ -56,7 +56,6 @@ typedef const struct si_pub  si_t;
 #define WL_SCAN(x) printk x
 
 #define SCAN_DUMP
-#define DHD_DEBUG
 
 #define WL_PNO(x)
 #define WL_TRACE_COEX(x)
